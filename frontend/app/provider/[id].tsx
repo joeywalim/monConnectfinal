@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Alert
+  View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Alert, Platform
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,6 +37,11 @@ export default function ProviderDetail() {
 
   const onBook = (serviceId: string) => {
     if (!user) {
+      if (Platform.OS === 'web') {
+        // Web Alert.alert doesn't support buttons reliably — go straight to login
+        router.push('/login');
+        return;
+      }
       Alert.alert('Log in to book', 'Please log in or create an account to book this service.', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Log in', onPress: () => router.push('/login') },
