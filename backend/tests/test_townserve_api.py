@@ -21,14 +21,11 @@ API = f"{BASE_URL}/api"
 
 ADMIN_EMAIL = "admin@townserve.com"
 ADMIN_PASSWORD = "Admin@12345"
-# NOTE: Seeded providers use @townserve.test (RFC2606 reserved TLD) which Pydantic EmailStr rejects.
-# Login is therefore impossible for seeded providers. We work around for non-auth tests by
-# directly inserting a provider via admin/registration with a valid domain.
-PROVIDER_EMAIL = "ramesh.kumar@townserve.test"
+# Seeded providers now use the non-reserved @townserve.in domain
+PROVIDER_EMAIL = "ramesh.kumar@townserve.in"
 PROVIDER_PASSWORD = "Provider@123"
 
-# Use a non-reserved domain so EmailStr passes
-TEST_CUSTOMER_EMAIL = f"test_customer_{uuid.uuid4().hex[:8]}@example.com"
+TEST_CUSTOMER_EMAIL = f"test_customer_{uuid.uuid4().hex[:8]}@townserve.in"
 TEST_CUSTOMER_PASSWORD = "Customer@123"
 
 
@@ -106,7 +103,7 @@ class TestAuth:
         assert r.status_code == 401
 
     def test_register_provider_creates_profile(self, s):
-        email = f"test_provider_{uuid.uuid4().hex[:8]}@townserve.test"
+        email = f"test_provider_{uuid.uuid4().hex[:8]}@townserve.in"
         r = s.post(f"{API}/auth/register", json={
             "name": "Test Provider",
             "email": email,
@@ -123,7 +120,7 @@ class TestAuth:
 
     def test_self_register_admin_blocked(self, s):
         r = s.post(f"{API}/auth/register", json={
-            "name": "X", "email": f"x_{uuid.uuid4().hex[:6]}@t.test",
+            "name": "X", "email": f"x_{uuid.uuid4().hex[:6]}@townserve.in",
             "password": "Admin@12345", "role": "admin"
         })
         assert r.status_code == 400

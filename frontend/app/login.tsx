@@ -79,7 +79,7 @@ export default function Login() {
           <View style={styles.demoBox}>
             <Text style={styles.demoTitle}>Try demo accounts</Text>
             <Text style={styles.demoText}>Admin: admin@townserve.com / Admin@12345</Text>
-            <Text style={styles.demoText}>Provider: ramesh.kumar@townserve.test / Provider@123</Text>
+            <Text style={styles.demoText}>Provider: ramesh.kumar@townserve.in / Provider@123</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -24,6 +24,9 @@ except Exception:
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # ---------- Config ----------
 MONGO_URL = os.environ['MONGO_URL']
 DB_NAME = os.environ['DB_NAME']
@@ -651,7 +654,7 @@ async def on_startup():
             cat = cat_map.get(cat_name)
             if not cat:
                 continue
-            email = name.lower().replace(" ", ".") + "@townserve.test"
+            email = name.lower().replace(" ", ".") + "@townserve.in"
             uid = str(uuid.uuid4())
             now = datetime.now(timezone.utc)
             await db.users.insert_one({
@@ -700,6 +703,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
