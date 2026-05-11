@@ -1,0 +1,90 @@
+{
+  "summary": "Initial test of TownServe MVP (Expo + FastAPI + MongoDB). Backend tested via pytest (29 tests, 27 pass = 93%). Frontend tested with Playwright on mobile viewport (390x844): login/register, admin panel, customer home, search, provider detail, booking flow rendered. ONE CRITICAL backend bug found: Pydantic EmailStr rejects `@townserve.test` (RFC2606 reserved TLD), which breaks ALL 8 seeded provider logins and the documented test-customer email. The login screen even advertises a non-working demo account.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/auth/login (and /api/auth/register)",
+        "issue": "Pydantic EmailStr (email-validator) rejects emails ending in reserved TLDs like '.test', '.example', '.invalid', '.localhost'. Every seeded provider (ramesh.kumar@townserve.test, suresh.sharma@townserve.test, ...) and the suggested test customer (customer1@townserve.test) return HTTP 422: \"value is not a valid email address: The part after the @-sign is a special-use or reserved name\". Demo credentials shown on the login screen do NOT work. The seed itself writes these users to Mongo bypassing Pydantic, so they exist in DB but can never authenticate. Fix options: (1) rename seeded domain to a non-reserved TLD e.g. @townserve.in / @townserve.app and update /app/memory/test_credentials.md + frontend demo-account hint; (2) replace EmailStr with a permissive validator (e.g. `EmailStr` from `pydantic[email]` with `email_validator` configured `check_deliverability=False, allow_test_domains=True` is not directly available — easier to use a regex validator).",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "startup logger",
+        "issue": "`logger` is defined at the bottom of server.py (line ~705) AFTER `on_startup` references it. It works in practice (startup runs after module is fully loaded), but is fragile. Define logger near the top."
+      },
+      {
+        "endpoint": "passlib bcrypt",
+        "issue": "passlib emits a warning `module 'bcrypt' has no attribute '__about__'` on every startup. Cosmetic; consider pinning bcrypt<4 or migrating to bcrypt directly."
+      },
+      {
+        "endpoint": "POST /api/payments/create-order",
+        "issue": "Accepts `booking_id` as a query param (not in JSON body). Works but is unusual; consider moving to body or path param for clarity."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Login screen demo-account hint",
+        "issue": "Hard-codes `Provider: ramesh.kumar@townserve.test / Provider@123` which the backend refuses (422). Reviewers/testers will perceive total auth breakage. Update text to match whatever credentials actually work after the backend fix.",
+        "testID": "n/a",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Provider role registration -> routing",
+        "issue": "After registering with role=provider the app appears to land on the customer Home tab (`/`) instead of `/provider-dashboard`. Needs verification by main agent — possibly `_layout.tsx`/`auth.tsx` always routes to (tabs) regardless of role.",
+        "testID": "n/a",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Seeded provider login from login screen",
+        "issue": "Fails with backend 422 for every seeded provider account because of the .test TLD issue above. End-to-end demo path is broken.",
+        "affected_testIDs": []
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "All screens",
+        "issues": [
+          "Interactive elements (TextInputs, buttons, role chips, tabs, cards) lack `testID` props. Testing required index-based selectors. Add testIDs (login-email-input, login-password-input, login-submit, register-role-customer, register-role-provider, provider-card-{id}, book-button, etc.).",
+          "Console warning `props.pointerEvents is deprecated. Use style.pointerEvents` is emitted continuously by React Native Web — clean up to silence."
+        ]
+      }
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_townserve_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "FIX SEED DATA: Re-seed admin/providers using a non-reserved TLD (e.g. `@townserve.in` or `@townserve.app`). Update /app/memory/test_credentials.md and the demo-account hint inside app/login.tsx so they match.",
+    "Decide whether to keep strict EmailStr or relax it. If apps in India will use uncommon domains it's fine, but the docs/demo credentials must be valid.",
+    "Verify provider role routing: registering as provider should land on /provider-dashboard, not the customer (tabs)/index. Inspect app/_layout.tsx and src/auth.tsx redirect logic.",
+    "Add `testID` props to all interactive components for stable automation (forms, buttons, tabs, cards, role chips, modal CTA).",
+    "Move `logger = logging.getLogger(__name__)` and `logging.basicConfig(...)` to the top of server.py so on_startup logs are guaranteed safe.",
+    "Optional: pin `bcrypt<4` or migrate from passlib to silence the bcrypt __about__ warning."
+  ],
+  "critical_code_review_comments": [
+    "server.py line 30: JWT_SECRET is read from env which is good, but the default placeholder value in backend/.env (`townserve_super_secret_change_me_in_prod_2026`) must be regenerated for production.",
+    "server.py: every seeded provider email uses reserved TLD `.test` which Pydantic EmailStr rejects — login path was never end-to-end tested.",
+    "server.py admin_verify_provider accepts `verify: bool` as query param; passing strings 'true'/'false' works but the frontend should always send booleans. Not a bug, just brittle.",
+    "Frontend lacks testIDs across components, hindering automated testing."
+  ],
+  "updated_files": [
+    "/app/backend/tests/__init__.py (new)",
+    "/app/backend/tests/test_townserve_api.py (new pytest suite covering auth/categories/providers/bookings/reviews/payments/admin)"
+  ],
+  "success_rate": {
+    "backend": "93% (27/29) — both failures stem from the single .test-TLD bug",
+    "frontend": "~80% — login UI, admin panel, customer home/search, provider detail rendered; seeded provider login broken; provider-role post-register routing suspect"
+  },
+  "seed_data_creation": "Tests register a fresh provider (test_provider_<uuid>@example.com) and a fresh customer (test_customer_<uuid>@example.com) per session to bypass the .test-TLD issue. Seed-created users are NOT deleted between runs (acceptable for dev DB).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "After main agent updates the seed emails to a non-reserved TLD and refreshes the DB (or wipes townserve_db.users/providers and restarts backend), re-run /app/backend/tests/test_townserve_api.py — the 2 currently-failing tests use a hard-coded .test email and should be updated to use the new domain. Then re-verify: (1) seeded provider login works on frontend; (2) provider role registration routes to /provider-dashboard; (3) admin verify toggle reflects on home featured list.",
+  "rca_of_issue": "ROOT CAUSE — Pydantic v2's EmailStr uses the `email-validator` package, which by default rejects RFC 2606 special-use TLDs (.test, .example, .invalid, .localhost). The seed code in server.py:654 generates provider emails like `ramesh.kumar@townserve.test`. These get written to Mongo (the insert path bypasses Pydantic), but every login/register that goes through Pydantic LoginBody/RegisterBody returns HTTP 422 before reaching the DB lookup. REPRO: `curl -X POST $BASE/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"ramesh.kumar@townserve.test\",\"password\":\"Provider@123\"}'` → 422. MITIGATION: change seeded domain in server.py and /app/memory/test_credentials.md and login.tsx demo hint to e.g. `@townserve.in`; wipe + reseed users collection."
+}
