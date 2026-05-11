@@ -1,0 +1,79 @@
+{
+  "project_name": "TownServe",
+  "theme": "Light",
+  "archetype": "1 (Organic & Earthy)",
+  "vibe": "Approachable, Trustworthy, Simple, Local",
+  "color_palette": {
+    "background": "#F8FAFC",
+    "surface": "#FFFFFF",
+    "primary": "#0F172A",
+    "primary_foreground": "#FFFFFF",
+    "secondary": "#E2E8F0",
+    "secondary_foreground": "#0F172A",
+    "accent": "#D97706",
+    "accent_foreground": "#FFFFFF",
+    "success": "#059669",
+    "success_foreground": "#FFFFFF",
+    "border": "#E2E8F0",
+    "muted": "#64748B"
+  },
+  "typography": {
+    "font_families": {
+      "headings": "Outfit",
+      "body": "DM Sans"
+    },
+    "scales": {
+      "h1": "text-4xl font-bold tracking-tight text-primary",
+      "h2": "text-2xl font-bold tracking-tight text-primary",
+      "h3": "text-xl font-semibold text-primary",
+      "body_large": "text-lg text-primary",
+      "body": "text-base text-primary",
+      "caption": "text-sm text-muted"
+    }
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-4 md:p-6",
+    "gap": "gap-4",
+    "touch_target_min_height": "48px (CRITICAL for low-tech audience)",
+    "border_radius": {
+      "cards": "rounded-2xl",
+      "buttons": "rounded-full"
+    }
+  },
+  "component_instructions": {
+    "navigation": "Use Bottom Tab Navigation. Labels MUST be always visible under icons. No hamburger menus for main flows.",
+    "buttons": "Primary actions should be large, full-width (or near full-width) pills with clear text. Minimum height 48px.",
+    "cards": "Use flat surfaces (surface color) with a 1px border (border color). Avoid soft shadows to prevent a 'muddy' look on lower-end Android devices.",
+    "inputs": "Forms must have large touch areas, borders with high contrast, and clear labels outside the input. Use clear placeholder text.",
+    "badges": "For ratings and 'verified' status, use the success color (#059669) for verified ticks and accent color (#D97706) for star ratings."
+  },
+  "icons": "lucide-react-native",
+  "image_urls": [
+    {
+      "url": "https://images.unsplash.com/photo-1646640381839-02748ae8ddf0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBob21lJTIwcmVwYWlyJTIwd29ya2VyfGVufDB8fHx8MTc3ODQ4OTU1OXww&ixlib=rb-4.1.0&q=85",
+      "category": "hero_banner",
+      "description": "Professional repair worker. Use for home screen hero or electrician category cover."
+    },
+    {
+      "url": "https://images.pexels.com/photos/6195114/pexels-photo-6195114.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "category": "provider_profile",
+      "description": "Cleaning service professional. Use for cleaner category or sample provider profile."
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1665242043190-0ef29390d289?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBob21lJTIwcmVwYWlyJTIwd29ya2VyfGVufDB8fHx8MTc3ODQ4OTU1OXww&ixlib=rb-4.1.0&q=85",
+      "category": "provider_profile",
+      "description": "Repair worker/plumber. Use for sample provider profile."
+    }
+  ],
+  "testing": {
+    "attributes": "CRITICAL: Add `data-testid` to all interactive elements (Pressable, TouchableOpacity, TextInput, Switch)."
+  },
+  "instructions_to_main_agent": [
+    "Develop the app using React Native and Expo (SDK 54). Use standard React Native components (View, Text, ScrollView, Pressable).",
+    "Use NativeWind or StyleSheet for styling, strictly adhering to the color palette provided.",
+    "Prioritize accessibility: Use high contrast colors, minimum 48px touch targets, and easily readable font sizes (minimum 16px for body text).",
+    "Use LTR English only.",
+    "Provider Dashboard and Admin panel should have distinct headers to differentiate them from the Customer view.",
+    "For icons, use `lucide-react-native`."
+  ]
+}
