@@ -66,6 +66,28 @@ export default function Bookings() {
 
   if (loading) return <SafeAreaView style={styles.safe}><ActivityIndicator style={{ marginTop: 80 }} color={colors.primary} /></SafeAreaView>;
 
+  // Guest view — prompt login
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>My bookings</Text>
+        </View>
+        <View style={styles.empty}>
+          <Calendar color={colors.muted} size={40} />
+          <Text style={styles.emptyTitle}>Log in to see your bookings</Text>
+          <Text style={styles.emptySub}>Sign in or create an account to book services and track your requests.</Text>
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push('/login')} testID="bookings-login-button">
+            <Text style={styles.primaryBtnText}>Log in</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/register')} testID="bookings-signup-button" style={{ marginTop: 12 }}>
+            <Text style={{ color: colors.accent, fontWeight: '700' }}>New here? Create an account</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>

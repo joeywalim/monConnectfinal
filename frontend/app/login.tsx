@@ -76,6 +76,10 @@ export default function Login() {
             <Text style={styles.secondaryLinkText}>New here? <Text style={{ color: colors.accent, fontWeight: '700' }}>Create an account</Text></Text>
           </TouchableOpacity>
 
+          <TouchableOpacity testID="guest-browse-button" style={styles.guestLink} onPress={() => router.replace('/(tabs)')}>
+            <Text style={styles.guestLinkText}>Continue without an account →</Text>
+          </TouchableOpacity>
+
           <View style={styles.demoBox}>
             <Text style={styles.demoTitle}>Try demo accounts</Text>
             <Text style={styles.demoText}>Admin: admin@townserve.com / Admin@12345</Text>
@@ -105,8 +109,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', marginTop: 8, minHeight: 52,
   },
   primaryBtnText: { color: colors.primaryFg, fontSize: 16, fontWeight: '700' },
-  secondaryLink: { alignItems: 'center', paddingVertical: 16 },
+  secondaryLink: { alignItems: 'center', paddingVertical: 12 },
   secondaryLinkText: { color: colors.muted, fontSize: 15 },
+  guestLink: { alignItems: 'center', paddingVertical: 8 },
+  guestLinkText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
   demoBox: { marginTop: 'auto', padding: 14, borderRadius: 12, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A' },
   demoTitle: { fontWeight: '700', color: '#92400E', marginBottom: 4 },
   demoText: { color: '#92400E', fontSize: 13 },

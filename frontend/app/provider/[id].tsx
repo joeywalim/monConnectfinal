@@ -36,7 +36,13 @@ export default function ProviderDetail() {
   }
 
   const onBook = (serviceId: string) => {
-    if (!user) { router.push('/login'); return; }
+    if (!user) {
+      Alert.alert('Log in to book', 'Please log in or create an account to book this service.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log in', onPress: () => router.push('/login') },
+      ]);
+      return;
+    }
     if (user.role !== 'customer') { Alert.alert('Customer only', 'Only customers can book services.'); return; }
     router.push({ pathname: `/book/${provider.id}`, params: { service_id: serviceId } });
   };

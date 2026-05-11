@@ -1,0 +1,48 @@
+{
+  "summary": "Iteration 3 (FRONTEND ONLY): Validated guest-browse feature on Expo web preview (390x844, fresh localStorage). 9/10 scenarios PASS. The only failure is Scenario 5: tapping 'Book' as a guest does NOT show any Alert/dialog on the web preview — neither window.alert, window.confirm, nor a DOM modal fires. On native (Expo Go iOS/Android) Alert.alert would work, but on react-native-web the modal doesn't render so the guest gets no feedback. All other guest screens (home, search, provider detail, bookings, profile, login back-link) work as specified, and post-login routing for customer / provider / admin is intact.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/provider/[id].tsx onBook()",
+        "issue": "When a guest (no token) taps the Book button on a service, Alert.alert('Log in to book', ...) never renders on the Expo web preview. No DOM modal, no window.alert and no window.confirm is invoked, so the tap is silent — the user gets zero feedback. Verified by polyfilling window.alert/confirm and listening for Playwright dialog events: all empty. Works on native, fails on web. Recommended fix: use a cross-platform modal (e.g. a small in-app Modal or a confirm() fallback for Platform.OS === 'web'), or directly router.push('/login') for web with an inline banner.",
+        "testID": "book-{serviceId}",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "All screens",
+        "issues": [
+          "Persistent react-native-web console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents' (cosmetic, carried over from iter 2)."
+        ]
+      }
+    ],
+    "react_native_issues": [
+      {
+        "component": "Alert.alert (react-native-web)",
+        "issue": "react-native-web's Alert is effectively a stub — multi-button alerts don't render. Any UX that gates a flow behind Alert buttons (e.g. the guest Book gate, the Cancel-booking confirm, logout confirm) will silently fail on the web build. Consider an in-app <Modal> for confirmations so the same code works on web and native."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_townserve_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix the guest 'Book' gate so it works on web (Expo web preview). Either (a) replace the Alert.alert with an in-app <Modal>/sheet, or (b) for Platform.OS==='web' just navigate to /login directly with an inline toast/banner. Same fix should be applied to logout confirm and cancel-booking confirm for full web parity."
+  ],
+  "critical_code_review_comments": [
+    "Guest browsing wiring in app/index.tsx, (tabs)/index.tsx, (tabs)/bookings.tsx, (tabs)/profile.tsx and login.tsx is clean and matches the spec.",
+    "src/auth.tsx correctly treats absence of token as guest (user=null) without forcing redirect — good.",
+    "Multiple Alert.alert call-sites (provider/[id].tsx onBook, bookings.tsx onCancel/submitReview/Errors, profile.tsx handleLogout, login.tsx error path, register.tsx if any) will not present a usable UI on web. Worth a small wrapper hook (useConfirm) backed by a cross-platform <Modal>."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend-only run)", "frontend": "9/10 scenarios pass (90%) — scenario 5 (guest Book → alert) fails on web only" },
+  "seed_data_creation": "Registered one fresh customer t<timestamp>@townserve.in / Customer@123 to verify post-login bookings tab. No cleanup required (dev DB).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Guest flows on web preview: scenarios 1,2,3,4,6,7,8,9,10 all green. The single failing scenario is #5 (guest taps Book on a service). Root cause is react-native-web's Alert.alert not rendering multi-button dialogs. After main agent applies the Modal/Platform.OS web branch, retest by: (a) fresh localStorage, (b) Home → tap first provider-card → tap any book-{serviceId}, (c) expect either a visible modal containing 'Log in to book' OR direct navigation to /login. Useful testIDs already in place: header-login-button, bookings-login-button, bookings-signup-button, guest-login-button, guest-signup-button, guest-browse-button, provider-card-{id}, book-{serviceId}.",
+  "rca_of_issue": "react-native-web ships Alert.alert as a minimal polyfill: it ignores the buttons array and at best falls back to window.alert with only the title. In Expo web preview, even window.alert isn't invoked for Alert.alert with a buttons array — the call effectively no-ops. Therefore the onBook() guest branch in app/provider/[id].tsx, which relies entirely on Alert.alert to gate the action, gives the user no visible response on web. Mitigation: replace with a cross-platform Modal component (or Platform.OS==='web' direct router.push('/login') + toast)."
+}

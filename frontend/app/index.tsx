@@ -10,15 +10,11 @@ export default function Index() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      router.replace('/login');
-    } else if (user.role === 'admin') {
-      router.replace('/admin');
-    } else if (user.role === 'provider') {
-      router.replace('/provider-dashboard');
-    } else {
-      router.replace('/(tabs)');
-    }
+    // General users (customers + guests) go straight to the home tabs.
+    // Providers & admins land on their dashboards.
+    if (user?.role === 'admin') router.replace('/admin');
+    else if (user?.role === 'provider') router.replace('/provider-dashboard');
+    else router.replace('/(tabs)');
   }, [user, loading]);
 
   return (

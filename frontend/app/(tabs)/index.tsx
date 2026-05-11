@@ -53,9 +53,14 @@ export default function Home() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hi {user?.name?.split(' ')[0] || 'there'} 👋</Text>
+            <Text style={styles.greeting}>{user ? `Hi ${user.name?.split(' ')[0]} 👋` : 'Welcome 👋'}</Text>
             <Text style={styles.title}>What do you need today?</Text>
           </View>
+          {!user && (
+            <TouchableOpacity style={styles.loginPill} onPress={() => router.push('/login')} testID="header-login-button">
+              <Text style={styles.loginPillText}>Log in</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity style={styles.searchBar} onPress={() => router.push('/(tabs)/search')} testID="home-search-bar">
@@ -142,9 +147,11 @@ export default function Home() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: 20, paddingBottom: 32 },
-  header: { marginBottom: 16 },
+  header: { marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   greeting: { fontSize: 14, color: colors.muted, fontWeight: '500' },
   title: { fontSize: 26, fontWeight: '800', color: colors.primary, marginTop: 2, letterSpacing: -0.5 },
+  loginPill: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
+  loginPillText: { color: colors.primaryFg, fontWeight: '700', fontSize: 13 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 16,

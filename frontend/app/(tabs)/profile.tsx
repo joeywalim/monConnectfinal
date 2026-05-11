@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth';
 import { colors } from '../../src/api';
-import { LogOut, User as UserIcon, Mail, Phone, BadgeCheck, Briefcase, Shield, ChevronRight } from 'lucide-react-native';
+import { LogOut, User as UserIcon, Mail, Phone, BadgeCheck, Briefcase, Shield, ChevronRight, LogIn, UserPlus } from 'lucide-react-native';
 
 export default function Profile() {
   const { user, signOut } = useAuth();
@@ -13,12 +13,39 @@ export default function Profile() {
   const handleLogout = () => {
     Alert.alert('Log out?', 'You will need to sign in again.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: async () => { await signOut(); router.replace('/login'); } },
+      { text: 'Log out', style: 'destructive', onPress: async () => { await signOut(); } },
     ]);
   };
 
-  if (!user) return null;
+  // ---------- Guest view ----------
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.container} testID="guest-profile-scroll">
+          <Text style={styles.title}>Profile</Text>
 
+          <View style={styles.guestHero}>
+            <View style={styles.guestIcon}><UserIcon color={colors.accent} size={36} /></View>
+            <Text style={styles.guestTitle}>Browsing as a guest</Text>
+            <Text style={styles.guestSub}>Sign in to book services, leave reviews, and track your bookings.</Text>
+
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push('/login')} testID="guest-login-button">
+              <LogIn color={colors.primaryFg} size={18} />
+              <Text style={styles.primaryBtnText}>Log in</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={() => router.push('/register')} testID="guest-signup-button">
+              <UserPlus color={colors.primary} size={18} />
+              <Text style={styles.secondaryBtnText}>Create account</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.footer}>TownServe v1.0 · Built with care for your neighbourhood</Text>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ---------- Logged-in view ----------
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container} testID="profile-scroll">
@@ -44,12 +71,12 @@ export default function Profile() {
             <Mail color={colors.muted} size={18} />
             <Text style={styles.infoText}>{user.email}</Text>
           </View>
-          {user.phone && (
+          {user.phone ? (
             <View style={styles.infoRow}>
               <Phone color={colors.muted} size={18} />
               <Text style={styles.infoText}>{user.phone}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {user.role === 'provider' && (
@@ -83,6 +110,24 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 26, fontWeight: '800', color: colors.primary, marginBottom: 16 },
+  guestHero: {
+    backgroundColor: colors.surface, borderRadius: 20, padding: 24, alignItems: 'center',
+    borderWidth: 1, borderColor: colors.border, marginTop: 20,
+  },
+  guestIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  guestTitle: { fontSize: 20, fontWeight: '800', color: colors.primary, marginBottom: 6 },
+  guestSub: { fontSize: 14, color: colors.muted, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
+  primaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: colors.primary, borderRadius: 999, paddingVertical: 14, width: '100%', minHeight: 52,
+  },
+  primaryBtnText: { color: colors.primaryFg, fontWeight: '700', fontSize: 16 },
+  secondaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: colors.background, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 999, paddingVertical: 14, marginTop: 10, width: '100%', minHeight: 52,
+  },
+  secondaryBtnText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
   profileCard: {
     flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: colors.surface,
     borderRadius: 16, padding: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 16,
