@@ -39,7 +39,7 @@ export default function Profile() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.footer}>TownServe v1.0 · Built with care for your neighbourhood</Text>
+          <Text style={styles.footer}>MonConnect v1.0 · Built with care for your neighbourhood</Text>
         </ScrollView>
       </SafeAreaView>
     );
@@ -100,7 +100,7 @@ export default function Profile() {
           <Text style={[styles.menuText, { color: colors.danger }]}>Log out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footer}>TownServe v1.0 · Built with care for your neighbourhood</Text>
+        <Text style={styles.footer}>MonConnect v1.0 · Built with care for your neighbourhood</Text>
       </ScrollView>
     </SafeAreaView>
   );

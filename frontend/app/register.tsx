@@ -45,7 +45,7 @@ export default function Register() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Create your account</Text>
-          <Text style={styles.subtitle}>Join TownServe — book or offer services.</Text>
+          <Text style={styles.subtitle}>Join MonConnect — book or offer services.</Text>
 
           <Text style={styles.label}>I am a</Text>
           <View style={styles.roleRow}>

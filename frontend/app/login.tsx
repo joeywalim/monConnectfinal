@@ -40,7 +40,7 @@ export default function Login() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.brandRow}>
             <View style={styles.logo}><Wrench color={colors.accent} size={28} /></View>
-            <Text style={styles.brand}>TownServe</Text>
+            <Text style={styles.brand}>MonConnect</Text>
           </View>
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.subtitle}>Book trusted local services in minutes.</Text>

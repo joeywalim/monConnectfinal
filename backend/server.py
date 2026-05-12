@@ -1,4 +1,4 @@
-"""TownServe Backend — Local Service Marketplace
+"""MonConnect Backend — Local Service Marketplace
 FastAPI + MongoDB + JWT Auth + Razorpay (optional)
 """
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Header
@@ -43,7 +43,7 @@ client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
 # ---------- App ----------
-app = FastAPI(title="TownServe API")
+app = FastAPI(title="MonConnect API")
 api_router = APIRouter(prefix="/api")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -594,7 +594,7 @@ async def admin_list_users(_: dict = Depends(require_role('admin'))):
 # ============= HEALTH =============
 @api_router.get("/")
 async def root():
-    return {"status": "ok", "service": "TownServe API"}
+    return {"status": "ok", "service": "MonConnect API"}
 
 
 # ============= STARTUP SEED =============
@@ -617,7 +617,7 @@ async def on_startup():
     if not admin:
         await db.users.insert_one({
             "id": str(uuid.uuid4()),
-            "name": "TownServe Admin",
+            "name": "MonConnect Admin",
             "email": ADMIN_EMAIL.lower(),
             "phone": None,
             "password_hash": hash_password(ADMIN_PASSWORD),
