@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, colors } from '../../src/api';
 import { useAuth } from '../../src/auth';
 import * as Icons from 'lucide-react-native';
-import { Star, BadgeCheck, ChevronRight } from 'lucide-react-native';
+import { Star, BadgeCheck, ChevronRight, Briefcase, Shield } from 'lucide-react-native';
 
 interface Category { id: string; name: string; icon: string; order: number; }
 interface Provider {
@@ -138,6 +138,41 @@ export default function Home() {
           </TouchableOpacity>
         ))}
 
+        {/* CTA section — only when user is not already a provider/admin */}
+        {(!user || user.role === 'customer') && (
+          <View style={styles.ctaSection}>
+            <TouchableOpacity
+              style={styles.providerCta}
+              onPress={() => router.push({ pathname: '/register', params: { role: 'provider' } })}
+              testID="become-provider-button"
+            >
+              <View style={styles.ctaIconWrap}>
+                <Briefcase color={colors.accent} size={28} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ctaTitle}>Become a service provider</Text>
+                <Text style={styles.ctaSub}>List your skills, get bookings from customers in your town. Free to join.</Text>
+              </View>
+              <ChevronRight color={colors.muted} size={20} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.adminCta}
+              onPress={() => router.push('/login')}
+              testID="admin-login-button"
+            >
+              <View style={[styles.ctaIconWrap, { backgroundColor: '#E2E8F0' }]}>
+                <Shield color={colors.primary} size={22} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.ctaTitle, { color: colors.primary }]}>Admin login</Text>
+                <Text style={styles.ctaSub}>Staff access for verification & support.</Text>
+              </View>
+              <ChevronRight color={colors.muted} size={20} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
@@ -188,4 +223,21 @@ const styles = StyleSheet.create({
   providerMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 4 },
   metaText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
   metaDot: { color: colors.muted, marginHorizontal: 2 },
+  ctaSection: { marginTop: 24, gap: 10 },
+  providerCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#FFFBEB', borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: '#FDE68A',
+  },
+  adminCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.surface, borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  ctaIconWrap: {
+    width: 48, height: 48, borderRadius: 14, backgroundColor: '#FEF3C7',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  ctaTitle: { fontSize: 15, fontWeight: '800', color: '#92400E' },
+  ctaSub: { fontSize: 12, color: colors.muted, marginTop: 2, lineHeight: 16 },
 });

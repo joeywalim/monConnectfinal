@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView,
   Platform, ScrollView, Alert, ActivityIndicator
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, Role } from '../src/auth';
 import { colors } from '../src/api';
@@ -12,7 +12,8 @@ import { User, Briefcase } from 'lucide-react-native';
 export default function Register() {
   const router = useRouter();
   const { signUp } = useAuth();
-  const [role, setRole] = useState<Role>('customer');
+  const params = useLocalSearchParams<{ role?: string }>();
+  const [role, setRole] = useState<Role>((params.role === 'provider' ? 'provider' : 'customer'));
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
