@@ -37,6 +37,7 @@ RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@townserve.com')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Admin@12345')
+PROVIDER_REGISTRATION_FEE = int(os.environ.get('PROVIDER_REGISTRATION_FEE', '199'))  # INR
 
 # ---------- DB ----------
 client = AsyncIOMotorClient(MONGO_URL)
@@ -290,6 +291,10 @@ async def register(body: RegisterBody):
             "rating_avg": 0.0,
             "rating_count": 0,
             "is_verified": False,
+            "is_paid": False,
+            "registration_fee": PROVIDER_REGISTRATION_FEE,
+            "registration_order_id": None,
+            "registration_payment_id": None,
             "created_at": now,
         }
         await db.providers.insert_one(provider_doc)
@@ -321,7 +326,8 @@ async def list_categories():
 # ============= PROVIDERS =============
 @api_router.get("/providers")
 async def list_providers(category_id: Optional[str] = None, q: Optional[str] = None):
-    query: dict = {}
+    # Only show providers who have paid the registration fee to the public.
+    query: dict = {"is_paid": True}
     if category_id:
         query["$or"] = [
             {"primary_category_id": category_id},
@@ -331,7 +337,7 @@ async def list_providers(category_id: Optional[str] = None, q: Optional[str] = N
         regex = {"$regex": q, "$options": "i"}
         text_clause = [{"name": regex}, {"city": regex}, {"bio": regex}, {"services.title": regex}]
         if "$or" in query:
-            query = {"$and": [{"$or": query["$or"]}, {"$or": text_clause}]}
+            query = {"$and": [query, {"$or": text_clause}]}
         else:
             query["$or"] = text_clause
     docs = await db.providers.find(query, {"_id": 0}).sort("rating_avg", -1).to_list(200)
@@ -343,6 +349,8 @@ async def get_provider(provider_id: str):
     doc = await db.providers.find_one({"id": provider_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Provider not found")
+    if not doc.get("is_paid"):
+        raise HTTPException(status_code=403, detail="Provider has not completed registration")
     return doc
 
 
@@ -554,6 +562,67 @@ async def verify_payment(body: PaymentVerifyBody, user: dict = Depends(require_r
     return {"status": "paid"}
 
 
+@api_router.post("/payments/registration-order")
+async def create_registration_order(user: dict = Depends(require_role('provider'))):
+    """Create a Razorpay order to pay the provider registration fee."""
+    profile = await db.providers.find_one({"id": user["id"]}, {"_id": 0})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Provider profile not found")
+    if profile.get("is_paid"):
+        raise HTTPException(status_code=400, detail="Registration already paid")
+    if not rzp_client:
+        raise HTTPException(status_code=503, detail="Razorpay not configured. Use mock-pay or ask admin to mark you as paid.")
+    amount_paise = PROVIDER_REGISTRATION_FEE * 100
+    rzp_order = rzp_client.order.create({
+        "amount": amount_paise,
+        "currency": "INR",
+        "receipt": f"reg-{user['id'][:30]}",
+        "payment_capture": 1,
+    })
+    await db.providers.update_one({"id": user["id"]}, {"$set": {"registration_order_id": rzp_order["id"]}})
+    return {
+        "order_id": rzp_order["id"],
+        "amount": amount_paise,
+        "currency": "INR",
+        "key_id": RAZORPAY_KEY_ID,
+        "fee_inr": PROVIDER_REGISTRATION_FEE,
+    }
+
+
+@api_router.post("/payments/registration-verify")
+async def verify_registration_payment(body: PaymentVerifyBody, user: dict = Depends(require_role('provider'))):
+    if not rzp_client:
+        raise HTTPException(status_code=503, detail="Razorpay not configured")
+    try:
+        rzp_client.utility.verify_payment_signature({
+            "razorpay_order_id": body.razorpay_order_id,
+            "razorpay_payment_id": body.razorpay_payment_id,
+            "razorpay_signature": body.razorpay_signature,
+        })
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    await db.providers.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "is_paid": True,
+            "registration_payment_id": body.razorpay_payment_id,
+        }},
+    )
+    return {"status": "paid"}
+
+
+@api_router.post("/payments/registration-mock-pay")
+async def mock_pay_registration(user: dict = Depends(require_role('provider'))):
+    """Test-only: marks the provider as paid without Razorpay. Available when Razorpay keys aren't configured."""
+    if rzp_client:
+        raise HTTPException(status_code=400, detail="Razorpay is configured — use registration-order instead.")
+    await db.providers.update_one(
+        {"id": user["id"]},
+        {"$set": {"is_paid": True, "registration_payment_id": "MOCK_DEV_PAY"}},
+    )
+    return {"status": "paid", "mode": "mock"}
+
+
 # ============= ADMIN =============
 @api_router.get("/admin/stats")
 async def admin_stats(_: dict = Depends(require_role('admin'))):
@@ -578,6 +647,15 @@ async def admin_verify_provider(provider_id: str, verify: bool = True, _: dict =
     await db.providers.update_one({"id": provider_id}, {"$set": {"is_verified": verify}})
     await db.users.update_one({"id": provider_id}, {"$set": {"is_verified": verify}})
     return {"id": provider_id, "is_verified": verify}
+
+
+@api_router.patch("/admin/providers/{provider_id}/mark-paid")
+async def admin_mark_paid(provider_id: str, paid: bool = True, _: dict = Depends(require_role('admin'))):
+    await db.providers.update_one(
+        {"id": provider_id},
+        {"$set": {"is_paid": paid, "registration_payment_id": "ADMIN_MARKED" if paid else None}},
+    )
+    return {"id": provider_id, "is_paid": paid}
 
 
 @api_router.get("/admin/bookings")
@@ -684,6 +762,9 @@ async def on_startup():
                 "rating_avg": 4.5,
                 "rating_count": 0,
                 "is_verified": True,
+                "is_paid": True,
+                "registration_fee": PROVIDER_REGISTRATION_FEE,
+                "registration_payment_id": "SEED",
                 "created_at": now,
             })
         logger.info("Seeded sample providers")

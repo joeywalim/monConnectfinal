@@ -17,6 +17,7 @@ export default function RootLayout() {
           <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="book/[providerId]" options={{ headerShown: false }} />
           <Stack.Screen name="provider-dashboard/index" options={{ headerShown: false }} />
+          <Stack.Screen name="provider-dashboard/pay" options={{ headerShown: false }} />
           <Stack.Screen name="admin/index" options={{ headerShown: false }} />
         </Stack>
       </AuthProvider>

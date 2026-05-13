@@ -33,12 +33,17 @@ export default function ProviderDashboard() {
         api.get('/categories'),
         api.get('/bookings/mine'),
       ]);
+      // Gate: if provider hasn't paid yet, force them to the payment screen.
+      if (!p.data.is_paid) {
+        router.replace('/provider-dashboard/pay');
+        return;
+      }
       setProfile(p.data); setCats(c.data); setBookings(b.data);
       setBio(p.data.bio || ''); setCity(p.data.city || '');
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.detail || 'Failed to load');
     } finally { setLoading(false); setRefreshing(false); }
-  }, []);
+  }, [router]);
 
   useEffect(() => { load(); }, [load]);
 

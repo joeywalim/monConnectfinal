@@ -43,6 +43,13 @@ export default function AdminPanel() {
     } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || 'Failed'); }
   };
 
+  const markPaid = async (id: string, current: boolean) => {
+    try {
+      await api.patch(`/admin/providers/${id}/mark-paid?paid=${!current}`);
+      load();
+    } catch (e: any) { Alert.alert('Error', e?.response?.data?.detail || 'Failed'); }
+  };
+
   const logout = () => {
     Alert.alert('Log out?', '', [
       { text: 'Cancel', style: 'cancel' },
@@ -102,16 +109,32 @@ export default function AdminPanel() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Text style={styles.cardTitle}>{p.name}</Text>
                 {p.is_verified && <BadgeCheck color={colors.success} size={14} />}
+                {!p.is_paid && (
+                  <View style={styles.unpaidBadge}><Text style={styles.unpaidBadgeText}>UNPAID</Text></View>
+                )}
               </View>
               <Text style={styles.cardSub}>{p.city || 'No city'} · {p.services.length} services · ⭐ {(p.rating_avg || 0).toFixed(1)}</Text>
             </View>
-            <TouchableOpacity
-              style={[styles.verifyBtn, p.is_verified && styles.unverifyBtn]}
-              onPress={() => verify(p.id, p.is_verified)}
-              testID={`verify-${p.id}`}
-            >
-              <Text style={[styles.verifyBtnText, p.is_verified && { color: colors.danger }]}>{p.is_verified ? 'Unverify' : 'Verify'}</Text>
-            </TouchableOpacity>
+            <View style={{ gap: 6 }}>
+              <TouchableOpacity
+                style={[styles.smallBtn, p.is_paid ? styles.smallBtnGreyed : styles.smallBtnAccent]}
+                onPress={() => markPaid(p.id, p.is_paid)}
+                testID={`mark-paid-${p.id}`}
+              >
+                <Text style={[styles.smallBtnText, p.is_paid && { color: colors.danger }]}>
+                  {p.is_paid ? 'Mark unpaid' : 'Mark paid'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.smallBtn, p.is_verified ? styles.smallBtnGreyed : styles.smallBtnSuccess]}
+                onPress={() => verify(p.id, p.is_verified)}
+                testID={`verify-${p.id}`}
+              >
+                <Text style={[styles.smallBtnText, p.is_verified && { color: colors.danger }]}>
+                  {p.is_verified ? 'Unverify' : 'Verify'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
 
@@ -152,4 +175,11 @@ const styles = StyleSheet.create({
   verifyBtn: { backgroundColor: colors.success, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, minHeight: 40 },
   unverifyBtn: { backgroundColor: '#FEE2E2' },
   verifyBtnText: { color: colors.primaryFg, fontWeight: '700', fontSize: 13 },
+  smallBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, minWidth: 100, alignItems: 'center' },
+  smallBtnAccent: { backgroundColor: colors.accent },
+  smallBtnSuccess: { backgroundColor: colors.success },
+  smallBtnGreyed: { backgroundColor: '#FEE2E2' },
+  smallBtnText: { color: colors.primaryFg, fontWeight: '700', fontSize: 12 },
+  unpaidBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 4 },
+  unpaidBadgeText: { color: colors.danger, fontSize: 10, fontWeight: '800' },
 });

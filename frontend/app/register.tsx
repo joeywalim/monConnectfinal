@@ -32,7 +32,7 @@ export default function Register() {
     try {
       setLoading(true);
       const u = await signUp(name.trim(), email.trim().toLowerCase(), password, role, phone.trim() || undefined);
-      if (u.role === 'provider') router.replace('/provider-dashboard');
+      if (u.role === 'provider') router.replace('/provider-dashboard/pay');
       else router.replace('/(tabs)');
     } catch (e: any) {
       Alert.alert('Registration failed', e?.response?.data?.detail || 'Try again');
